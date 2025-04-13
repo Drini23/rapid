@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Football Matches</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3a86ff;
+            --secondary: #8338ec;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .toggle-btn {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-btn input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .toggle-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        #match-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .match-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .match-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .match-status {
+            background: var(--success);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .match-content {
+            padding: 1.5rem;
+        }
+
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 40%;
+        }
+
+        .team-logo {
+            width: 50px;
+            height: 50px;
+            background: #f1f1f1;
+            border-radius: 50%;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .team-name {
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .score {
+            font-size: 2rem;
+            font-weight: 700;
+            width: 20%;
+            text-align: center;
+        }
+
+        .match-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        .detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .detail i {
+            color: var(--primary);
+        }
+
+        .no-matches {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .connected {
+            background-color: var(--success);
+            color: white;
+            opacity: 1;
+        }
+
+        .disconnected {
+            background-color: var(--danger);
+            color: white;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            #match-container {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Animation for new matches */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .match-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Live Football Matches</h1>
+            <div class="toggle-container">
+                <span class="toggle-label">Live Matches</span>
+                <label class="toggle-btn">
+                    <input type="checkbox" id="toggle-input">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </header>
+
+        <div id="match-container">
+            <div class="no-matches">
+                <h3>Loading matches...</h3>
+                <p>Please wait while we connect to the live feed</p>
+            </div>
+        </div>
+
+        <div id="connection-status" class="connection-status">
+            Connecting to server...
+        </div>
+    </div>
+
+    <script>
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/live/');
+    let showLive = false;
+    let allData = {
+        todays_matches: [],
+        live_matches: []
+    };
+
+    const connectionStatus = document.getElementById('connection-status');
+
+    socket.onopen = () => {
+        console.log("✅ WebSocket connected!");
+        connectionStatus.textContent = "Connected to live feed";
+        connectionStatus.className = "connection-status connected";
+        setTimeout(() => {
+            connectionStatus.style.opacity = '0';
+        }, 3000);
+    };
+
+    socket.onmessage = function (event) {
+        try {
+            const data = JSON.parse(event.data);
+            console.log("📦 Received from WebSocket:", data);
+
+            if (data.todays_matches && data.live_matches) {
+                allData.todays_matches = data.todays_matches;
+                allData.live_matches = data.live_matches;
+                renderMatches();
+            } else {
+                console.warn("⚠️ WebSocket data structure is incorrect:", data);
+            }
+
+            connectionStatus.textContent = "Live data updated";
+            connectionStatus.className = "connection-status connected";
+            connectionStatus.style.opacity = '1';
+
+            setTimeout(() => {
+                connectionStatus.style.opacity = '0';
+            }, 2000);
+
+        } catch (error) {
+            console.error("❌ Error parsing WebSocket data:", error);
+        }
+    };
+
+    socket.onclose = () => {
+        console.log("❌ WebSocket disconnected.");
+        connectionStatus.textContent = "Disconnected - attempting to reconnect";
+        connectionStatus.className = "connection-status disconnected";
+        connectionStatus.style.opacity = '1';
+
+        setTimeout(() => {
+            window.location.reload();
+        }, 5000);
+    };
+
+    socket.onerror = () => {
+        connectionStatus.textContent = "Connection error";
+        connectionStatus.className = "connection-status disconnected";
+        connectionStatus.style.opacity = '1';
+    };
+
+    function renderMatches() {
+        const container = document.getElementById('match-container');
+        container.innerHTML = "";
+
+        const matches = showLive ? allData.live_matches : allData.todays_matches;
+
+        if (!matches || matches.length === 0) {
+            container.innerHTML = `
+                <div class="no-matches">
+                    <h3>No ${showLive ? "live" : "today's"} matches available</h3>
+                    <p>Check back later for updates</p>
+                </div>
+            `;
+            return;
+        }
+
+        matches.forEach(match => {
+            const card = document.createElement('div');
+            card.className = "match-card";
+
+            // Determine status color
+            let statusClass = '';
+            if (match.status.includes("Live") || match.status.includes("LIVE")) {
+                statusClass = 'var(--success)';
+            } else if (match.status.includes("Finished") || match.status.includes("FT")) {
+                statusClass = 'var(--dark)';
+            } else if (match.status.includes("Cancelled")) {
+                statusClass = 'var(--danger)';
+            } else {
+                statusClass = 'var(--warning)';
+            }
+
+            card.innerHTML = `
+                <div class="match-header">
+                    <span>${match.competition || 'Football Match'}</span>
+                    <span class="match-status" style="background: ${statusClass}">${match.status}</span>
+                </div>
+                <div class="match-content">
+                    <div class="teams">
+                        <div class="team">
+                            <div class="team-logo">${match.home_team?.charAt(0)}</div>
+                            <div class="team-name">${match.home_team}</div>
+                        </div>
+                        <div class="score">${match.home_goals ?? '0'} - ${match.away_goals ?? '0'}</div>
+                        <div class="team">
+                            <div class="team-logo">${match.away_team?.charAt(0)}</div>
+                            <div class="team-name">${match.away_team}</div>
+                        </div>
+                    </div>
+                    <div class="match-details">
+                        <div class="detail">
+                            <i class="fas fa-clock"></i>
+                            <span>${match.elapsed_time ?? '0'}'</span>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-calendar"></i>
+                            <span>${match.date || 'Today'}</span>
+                        </div>
+                        <div class="detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${match.venue || 'Unknown venue'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // Toggle switch
+    document.getElementById("toggle-input").addEventListener("change", (e) => {
+        showLive = e.target.checked;
+        renderMatches();
+    });
+
+    // Initial render
+    renderMatches();
+</script>
+
+</body>
+</html>
