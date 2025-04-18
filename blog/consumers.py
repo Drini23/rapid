@@ -30,7 +30,7 @@ def fetch_matches(filter_by_live=False):
     data = response.json()
 
     print("📡 Fetching new data from API")
-    cache.set(cache_key, data, timeout=300)
+    cache.set(cache_key, data, timeout=30)
     return data
 
 
@@ -61,7 +61,7 @@ class LiveMatchConsumer(AsyncWebsocketConsumer):
                 'live_matches': live_data
             }))
 
-            await asyncio.sleep(30)  # Send updates every 30 seconds
+            await asyncio.sleep(10)  # Send updates every 30 seconds
 
     def process_match_data(self, matches_data):
         matches = []
